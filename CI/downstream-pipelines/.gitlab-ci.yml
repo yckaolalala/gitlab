@@ -1,0 +1,44 @@
+before_script:
+  - |
+    if [[ "$CI_MERGE_REQUEST_ID" != "" ]]; then
+      # It's a merge request
+      if [[ "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" == "master" || "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" == development-* ]]; then
+        TEST_IMAGE_TAG="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      fi
+    else
+      # It's not a merge request
+      if [[ "$CI_COMMIT_REF_NAME" == "master" || "$CI_COMMIT_REF_NAME" == development-* ]]; then
+        TEST_IMAGE_TAG="$CI_COMMIT_REF_NAME"
+      fi
+    fi
+
+stages:
+  - build-config
+  - test
+
+setup:
+  stage: build-config
+  image: ubuntu:jammy-20211029
+  script:
+    - |
+      # this line generates our pipeline
+      if [ ! -z "$TEST_IMAGE_TAG" ]; then
+        bash tests/create-pipeline.sh $TEST_IMAGE_TAG > gitlab_jobs.yml
+        cat gitlab_jobs.yml
+      fi
+  artifacts:
+    paths:
+      - gitlab_jobs.yml
+  variables:
+    PARALLEL_LIMIT: 2
+
+trigger_jobs:
+  stage: test 
+  needs:
+    - setup
+  trigger:
+    include:
+      - artifact: gitlab_jobs.yml # this file is generated on runtime in the build stage
+        job: setup
+    strategy: depend
+

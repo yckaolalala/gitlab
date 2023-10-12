@@ -1,0 +1,21 @@
+## GitLab Runner Image
+##
+## By default it's using gitlab/gitlab-runner:alpine-v{VERSION}
+## where {VERSION} is taken from Chart.yaml from appVersion field
+##
+## ref: https://hub.docker.com/r/gitlab/gitlab-runner/tags/
+##
+image:
+  registry: registry.gitlab.com
+  image: gitlab-org/gitlab-runner
+  tag: alpine3.15-v14.10.1
+
+
+imagePullPolicy: IfNotPresent
+gitlabUrl: ~
+certsSecretName: runner.crt
+
+runnerRegistrationToken: ~
+unregisterRunners: true
+concurrent: 10
+checkInterval: 10
